@@ -29,3 +29,33 @@ jobs:
           # Hiển thị cấu trúc để kiểm tra xem file đã ra chưa
           echo "=== Cấu trúc file sau khi giải nén ==="
           ls -R extracted_code
+
+      # ── 3. Cài đặt Java 21 ──────────────────────────────────────────
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      # ── 4. Tìm file pom.xml và tiến hành Build Maven ────────────────
+      - name: Build with Maven
+        run: |
+          # Tự động tìm vị trí file pom.xml bên trong thư mục vừa giải nén
+          POM_PATH=$(find extracted_code -name "pom.xml" | head -n 1)
+          if [ -z "$POM_PATH" ]; then
+            echo "LỖI: Không tìm thấy file pom.xml bên trong file zip!"
+            exit 1
+          fi
+          echo "Tìm thấy pom.xml tại: $POM_PATH"
+          mvn -B clean package --file "$POM_PATH" --no-transfer-progress
+
+      # ── 5. Gom file .jar kết quả để bạn tải về điện thoại ───────────
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Minecraft-Plugin-JAR
+          path: extracted_code/**/target/*.jar
+          if-no-files-found: error
+          retention-days: 30
+          
