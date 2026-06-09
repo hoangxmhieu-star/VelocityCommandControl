@@ -1,0 +1,31 @@
+name: Build Plugin From Zip
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Cho phép bạn bấm nút Build thủ công trên điện thoại
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Tải file .zip từ GitHub về máy ảo ──────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Giải nén file code của bạn vào thư mục tạm ──────────────
+      - name: Unzip source code
+        run: |
+          # Tìm file .zip bất kỳ nằm ở thư mục gốc và giải nén nó
+          ZIP_FILE=$(find . -maxdepth 1 -name "*.zip" | head -n 1)
+          if [ -z "$ZIP_FILE" ]; then
+            echo "LỖI: Không tìm thấy file .zip nào ở thư mục gốc!"
+            exit 1
+          fi
+          echo "Đang giải nén file: $ZIP_FILE"
+          unzip "$ZIP_FILE" -d extracted_code
+          
+          # Hiển thị cấu trúc để kiểm tra xem file đã ra chưa
+          echo "=== Cấu trúc file sau khi giải nén ==="
+          ls -R extracted_code
